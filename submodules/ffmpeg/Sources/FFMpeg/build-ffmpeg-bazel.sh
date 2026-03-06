@@ -149,7 +149,7 @@ then
 		fi
 
 		CXXFLAGS="$CFLAGS"
-		LDFLAGS="$CFLAGS"
+		LDFLAGS="$CFLAGS -fuse-ld=lld"
 
 		CONFIGURED_MARKER="$THIN/$RAW_ARCH/configured_marker"
 		CONFIGURED_MARKER_CONTENTS=""

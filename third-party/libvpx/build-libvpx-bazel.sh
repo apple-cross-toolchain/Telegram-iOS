@@ -75,6 +75,7 @@ build_target() {
   mkdir "${target}"
   cd "${target}"
   # libvpx's configure script uses bash-specific test operators on Darwin.
+  export LDFLAGS="-fuse-ld=lld"
   eval bash "${LIBVPX_SOURCE_DIR}/configure" --target="${target}" \
     ${CONFIGURE_ARGS} ${EXTRA_CONFIGURE_ARGS} ${target_specific_flags} \
 

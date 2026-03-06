@@ -86,7 +86,7 @@ mkdir -p "${INTERDIR}"
   CC="$CC" \
   AR="$AR" \
   RANLIB="$RANLIB" \
-  LDFLAGS="$LDFLAGS ${OPT_LDFLAGS} -fPIE ${MIN_VERSION_FLAG} -L${OUTPUTDIR}/lib -isysroot ${SDK_PATH}" \
+  LDFLAGS="$LDFLAGS ${OPT_LDFLAGS} -fuse-ld=lld -fPIE ${MIN_VERSION_FLAG} -L${OUTPUTDIR}/lib -isysroot ${SDK_PATH}" \
   CFLAGS="$CFLAGS ${OPT_CFLAGS} -fPIE ${MIN_VERSION_FLAG} -I${OUTPUTDIR}/include -isysroot ${SDK_PATH}" \
 
 make -j
