@@ -1,6 +1,6 @@
 #import <MtProtoKit/MTOutputStream.h>
 
-#if TARGET_OS_IPHONE
+#if defined(__linux__)
 #   import <endian.h>
 #endif
 

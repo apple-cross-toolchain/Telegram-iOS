@@ -8,7 +8,7 @@ genrule(
     cmd_bash =
 """
 set -x
-    core_count=`PATH="$$PATH:/usr/sbin" sysctl -n hw.logicalcpu`
+    core_count=`nproc`
     BUILD_DIR="$(RULEDIR)/build"
     rm -rf "$$BUILD_DIR"
     mkdir -p "$$BUILD_DIR"
@@ -18,11 +18,11 @@ set -x
     mkdir -p "$$CMAKE_DIR"
     tar -xf "$(location @cmake_tar_gz//file)" -C "$$CMAKE_DIR"
     
-    tar -xzf "$(location @flatbuffers_zip//file)" --directory "$$BUILD_DIR"
+    unzip -q "$(location @flatbuffers_zip//file)" -d "$$BUILD_DIR"
     pushd "$$BUILD_DIR/flatbuffers-24.12.23"
     mkdir build
     cd build
-    PATH="$$CMAKE_DIR/cmake-4.1.2-macos-universal/CMake.app/Contents/bin:$$PATH" cmake .. -DCMAKE_BUILD_TYPE=Release -DFLATBUFFERS_BUILD_TESTS=0 -DFLATBUFFERS_INSTALL=0 -DFLATBUFFERS_BUILD_FLATLIB=0 -DFLATBUFFERS_STATIC_FLATC=0
+    PATH="$$CMAKE_DIR/cmake-4.1.2-linux-x86_64/bin:$$PATH" cmake .. -DCMAKE_BUILD_TYPE=Release -DFLATBUFFERS_BUILD_TESTS=0 -DFLATBUFFERS_INSTALL=0 -DFLATBUFFERS_BUILD_FLATLIB=0 -DFLATBUFFERS_STATIC_FLATC=0
     make -j $$core_count
     popd
 

@@ -7,6 +7,7 @@ import NaturalLanguage
 import TelegramCore
 import SwiftUI
 import Translation
+import _Translation_SwiftUI
 import Combine
 
 // Incuding at least one Objective-C class in a swift file ensures that it doesn't get stripped by the linker

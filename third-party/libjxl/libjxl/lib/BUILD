@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 # Copyright (c) the JPEG XL Project Authors. All rights reserved.
 #
 # Use of this source code is governed by a BSD-style

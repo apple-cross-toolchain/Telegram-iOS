@@ -15,6 +15,8 @@ import MultilineTextWithEntitiesComponent
 import BundleIconComponent
 import UndoUI
 import SwiftUI
+import Translation
+import _Translation_SwiftUI
 import ResizableSheetComponent
 import GlassBarButtonComponent
 
@@ -135,7 +137,7 @@ private final class SheetContent: CombinedComponent {
             self.translationDisposable.dispose()
         }
         
-        func translate(text: String, fromLang: String?, toLang: String) -> Signal<(String, [MessageTextEntity])?, TranslationError> {
+        func translate(text: String, fromLang: String?, toLang: String) -> Signal<(String, [MessageTextEntity])?, TelegramCore.TranslationError> {
             if self.useAlternativeTranslation {
                 return alternativeTranslateText(text: text, fromLang: fromLang, toLang: toLang)
             } else {

@@ -1,3 +1,4 @@
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
 
 filegroup(
     name = "LaunchScreen",

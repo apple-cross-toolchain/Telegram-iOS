@@ -1,3 +1,5 @@
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@bazel_skylib//rules:common_settings.bzl",
     "bool_flag",
 )
@@ -839,7 +841,7 @@ genrule(
     name = "StripFramework",
     cmd_bash =
 """
-    echo 'for f in $$1/*.framework; do binary_name=`echo $$(basename $$f) | sed -e "s/\\\\.framework//"`; strip -ST $$f/$$binary_name; done;' > $(location StripFramework.sh)
+    echo 'STRIP=strip; if [ -n "$${DEVELOPER_DIR:-}" ]; then TC_STRIP="$$DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"; if [ -x "$$TC_STRIP" ]; then STRIP="$$TC_STRIP"; fi; fi; for f in $$1/*.framework; do binary_name=`echo $$(basename $$f) | sed -e "s/\\\\.framework//"`; $$STRIP -ST $$f/$$binary_name; done;' > $(location StripFramework.sh)
     echo '' >> $(location StripFramework.sh)
 """,
     outs = [
@@ -1279,10 +1281,10 @@ plist_fragment(
     )
 )
 
-swift_intent_library(
+swift_library(
     name = "GeneratedSources",
-    src = "SiriIntents/en.lproj/Intents.intentdefinition",
     module_name = "GeneratedSources",
+    srcs = ["SiriIntents/GeneratedIntentTypes.swift"],
     visibility = ["//visibility:public"],
 )
 
@@ -1297,6 +1299,8 @@ swift_library(
     module_name = "IntentsExtensionLib",
     srcs = glob([
         "SiriIntents/**/*.swift",
+    ], exclude = [
+        "SiriIntents/GeneratedIntentTypes.swift",
     ]),
     copts = [
         "-warnings-as-errors",

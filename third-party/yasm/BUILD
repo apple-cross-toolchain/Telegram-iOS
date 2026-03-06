@@ -16,7 +16,7 @@ genrule(
     cmd_bash =
 """
 set -x
-    core_count=`PATH="$$PATH:/usr/sbin" sysctl -n hw.logicalcpu`
+    core_count=`nproc`
     BUILD_DIR="$(RULEDIR)/build"
     rm -rf "$$BUILD_DIR"
     mkdir -p "$$BUILD_DIR"
@@ -32,7 +32,7 @@ set -x
     pushd "$$BUILD_DIR/yasm-1.3.0"
     mkdir build
     cd build
-    PATH="$$CMAKE_DIR/cmake-4.1.2-macos-universal/CMake.app/Contents/bin:$$PATH" cmake .. -DYASM_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DPYTHON_EXECUTABLE="$$(which python3)"
+    PATH="$$CMAKE_DIR/cmake-4.1.2-linux-x86_64/bin:$$PATH" cmake .. -DYASM_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DPYTHON_EXECUTABLE="$$(which python3)"
     make -j $$core_count
     popd
 

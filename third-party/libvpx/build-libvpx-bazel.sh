@@ -3,6 +3,15 @@
 set -e
 set -x
 
+# Resolve DEVELOPER_DIR to absolute path before any cd
+if [ -n "${DEVELOPER_DIR:-}" ] && [ "${DEVELOPER_DIR}" = "${DEVELOPER_DIR#/}" ]; then
+  export DEVELOPER_DIR="$(cd "$DEVELOPER_DIR" && pwd -P)"
+fi
+# Ensure toolchain binaries are on PATH
+if [ -n "${DEVELOPER_DIR:-}" ]; then
+  export PATH="$DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin:$PATH"
+fi
+
 ARCH="$1"
 
 SOURCE_DIR=$(echo "$(cd "$(dirname "$2")"; pwd -P)/$(basename "$2")")
@@ -65,7 +74,8 @@ build_target() {
 
   mkdir "${target}"
   cd "${target}"
-  eval "${LIBVPX_SOURCE_DIR}/configure" --target="${target}" \
+  # libvpx's configure script uses bash-specific test operators on Darwin.
+  eval bash "${LIBVPX_SOURCE_DIR}/configure" --target="${target}" \
     ${CONFIGURE_ARGS} ${EXTRA_CONFIGURE_ARGS} ${target_specific_flags} \
 
   export DIST_DIR
@@ -129,8 +139,7 @@ create_vpx_framework_config_shim() {
   done
 
   # Consume the last line of output from the loop: We don't want it.
-  sed -i.bak -e '$d' "${config_file}"
-  rm "${config_file}.bak"
+  sed -i -e '$d' "${config_file}"
 
   printf "#endif\n\n" >> "${config_file}"
   printf "#endif  // ${include_guard}" >> "${config_file}"

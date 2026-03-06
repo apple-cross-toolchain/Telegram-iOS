@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 
 objc_library(
@@ -24,6 +26,8 @@ objc_library(
     ],
     cxxopts = [
         "-std=c++17",
+        "-include",
+        "optional",
     ],
     hdrs = glob([
         "lottiecpp/PublicHeaders/**/*.h",

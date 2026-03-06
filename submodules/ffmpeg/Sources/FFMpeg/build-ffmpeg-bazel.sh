@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -x
 
@@ -84,7 +84,7 @@ do
 	do
 		LIB="$THIN/$ARCH/lib/$LIB_NAME.a"
 		if [ -f "$LIB" ]; then
-			LIB_DATE=`crc32 "$LIB"`
+			LIB_DATE=`cksum "$LIB" | cut -d' ' -f1`
 			LIBS_HASH="$LIBS_HASH $ARCH/$LIB:$LIB_DATE"
 		fi
 	done
@@ -124,13 +124,12 @@ then
 		LIBVPX_PATH="$SOURCE_DIR/libvpx"
 		LIBDAV1D_PATH="$SOURCE_DIR/libdav1d"
 
-		CFLAGS="$EXTRA_CFLAGS -arch $ARCH"
 		if [ "$RAW_ARCH" = "sim_arm64" ]; then
 			PLATFORM="iPhoneSimulator"
-		    CFLAGS="$CFLAGS -mios-simulator-version-min=$DEPLOYMENT_TARGET --target=arm64-apple-ios$DEPLOYMENT_TARGET-simulator"
+		    CFLAGS="$EXTRA_CFLAGS --target=arm64-apple-ios$DEPLOYMENT_TARGET-simulator"
 		else
 		    PLATFORM="iPhoneOS"
-		    CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_TARGET"
+		    CFLAGS="$EXTRA_CFLAGS --target=arm64-apple-ios$DEPLOYMENT_TARGET"
 		    if [ "$ARCH" = "arm64" ]
 		    then
 		        EXPORT="GASPP_FIX_XCODE5=1"
@@ -138,6 +137,8 @@ then
 		fi
 
 		XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
+		SDK_PATH=$(xcrun --sdk $XCRUN_SDK --show-sdk-path)
+		CFLAGS="$CFLAGS -isysroot $SDK_PATH"
 		CC="xcrun -sdk $XCRUN_SDK clang"
 
 		if [ "$RAW_ARCH" = "arm64" ] || [ "$RAW_ARCH" = "sim_arm64" ]
@@ -166,6 +167,8 @@ then
 			    --arch=$ARCH \
 			    --cc="$CC" \
 				--as="$AS" \
+			    --host-cc=/usr/bin/gcc \
+			    --host-cflags="-B/usr/bin" \
 			    $CONFIGURE_FLAGS \
 			    --extra-cflags="$CFLAGS" \
 			    --extra-ldflags="$LDFLAGS" \
@@ -176,7 +179,7 @@ then
 			echo "$CONFIGURE_FLAGS" > "$CONFIGURED_MARKER"
 		fi
 
-		CORE_COUNT=`PATH="$PATH:/usr/sbin" sysctl -n hw.logicalcpu`
+		CORE_COUNT=$(nproc 2>/dev/null || PATH="$PATH:/usr/sbin" sysctl -n hw.logicalcpu 2>/dev/null || echo 4)
 		make -j$CORE_COUNT install $EXPORT || exit 1
 
 		popd
@@ -190,7 +193,7 @@ do
 	do
 		LIB="$THIN/$ARCH/lib/$LIB_NAME.a"
 		if [ -f "$LIB" ]; then
-			LIB_DATE=`crc32 "$LIB"`
+			LIB_DATE=`cksum "$LIB" | cut -d' ' -f1`
 			UPDATED_LIBS_HASH="$UPDATED_LIBS_HASH $ARCH/$LIB:$LIB_DATE"
 		fi
 	done

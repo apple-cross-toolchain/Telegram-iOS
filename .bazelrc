@@ -1,18 +1,35 @@
+startup --host_jvm_args=-Xmx12g
+
 build --action_env=ZERO_AR_DATE=1
 
+build --define=telegramVersion=11.0
+build --define=buildNumber=100000
+
 build --apple_platform_type=ios
-build --enable_platform_specific_config
-build --apple_crosstool_top=@local_config_apple_cc//:toolchain
-build --crosstool_top=@local_config_apple_cc//:toolchain
-build --host_crosstool_top=@local_config_apple_cc//:toolchain
+build --ios_multi_cpus=arm64
 
-build --per_file_copt=".*\.m$","@-fno-objc-msgsend-selector-stubs"
-build --per_file_copt=".*\.mm$","@-fno-objc-msgsend-selector-stubs"
+common --repo_env=BAZEL_NO_APPLE_CPP_TOOLCHAIN=1
+common --repo_env=BAZEL_DO_NOT_DETECT_SWIFT_TOOLCHAIN=1
+build --xcode_version_config=@rules_applecross//xcode_config:host_xcodes
+build --action_env=DEVELOPER_DIR=external/rules_applecross++apple_cross_toolchain+apple_cross_toolchain/Xcode.app/Contents/Developer
+build --@build_bazel_rules_apple//apple:sdk_tool_files=@apple_cross_toolchain//:sdk_tool_files
 
+#build --per_file_copt=".*\.m$","@-fno-objc-msgsend-selector-stubs"
+#build --per_file_copt=".*\.mm$","@-fno-objc-msgsend-selector-stubs"
+
+build --copt=-Wno-reorder-init-list
+build --copt=-Wno-deprecated-declarations
+build --copt=-Wno-enum-enum-conversion
+build --copt=-Wno-misleading-indentation
+build --copt=-Wno-enum-float-conversion
+build --copt=-Wno-module-import-in-extern-c
+build --cxxopt=-std=c++17
+build --host_cxxopt=-std=c++17
 build --features=debug_prefix_map_pwd_is_dot
 build --features=swift.cacheable_swiftmodules
 build --features=swift.debug_prefix_map
 build --features=swift.enable_vfsoverlays
+build --features=disable_legacy_signing
 build:dbg --features=swift.emit_swiftsourceinfo
 
 build --strategy=Genrule=standalone
@@ -22,11 +39,11 @@ build --strategy=SwiftCompile=worker
 
 #common --registry=https://raw.githubusercontent.com/bazelbuild/bazel-central-registry/main/
 
-# SourceKit BSP: Swift indexing features
-common --features=swift.index_while_building
-common --features=swift.use_global_index_store
-common --features=swift.use_global_module_cache
-common --features=oso_prefix_is_pwd
+# SourceKit BSP: Swift indexing features (disabled for Linux cross-compilation)
+#common --features=swift.index_while_building
+#common --features=swift.use_global_index_store
+#common --features=swift.use_global_module_cache
+#common --features=oso_prefix_is_pwd
 
 # SourceKit BSP: Index build config (used for background indexing)
 common:index_build --experimental_convenience_symlinks=ignore

@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
 
 headers = [
     "turbojpeg.h",
@@ -28,17 +30,7 @@ genrule(
     """
     set -ex
 
-    if [ "$(TARGET_CPU)" == "ios_armv7" ]; then
-        BUILD_ARCH="armv7"
-    elif [ "$(TARGET_CPU)" == "ios_arm64" ]; then
-        BUILD_ARCH="arm64"
-    elif [ "$(TARGET_CPU)" == "ios_sim_arm64" ]; then
-        BUILD_ARCH="sim_arm64"
-    elif [ "$(TARGET_CPU)" == "ios_x86_64" ]; then
-        BUILD_ARCH="x86_64"
-    else
-        echo "Unsupported architecture $(TARGET_CPU)"
-    fi
+    BUILD_ARCH="arm64"
 
     BUILD_DIR="$(RULEDIR)/build_$${BUILD_ARCH}"
     rm -rf "$$BUILD_DIR"
@@ -57,7 +49,7 @@ genrule(
 
     mkdir -p "$$BUILD_DIR/Public/mozjpeg"
 
-    PATH="$$PATH:$$CMAKE_DIR/cmake-4.1.2-macos-universal/CMake.app/Contents/bin" sh $$BUILD_DIR/build-mozjpeg-bazel.sh $$BUILD_ARCH "$$BUILD_DIR/mozjpeg" "$$BUILD_DIR"
+    PATH="$$CMAKE_DIR/cmake-4.1.2-linux-x86_64/bin:$$PATH" bash $$BUILD_DIR/build-mozjpeg-bazel.sh $$BUILD_ARCH "$$BUILD_DIR/mozjpeg" "$$BUILD_DIR"
     """ +
     "\n".join([
         "cp -f \"$$BUILD_DIR/mozjpeg/{}\" \"$(location Public/mozjpeg/{})\"".format(header, header) for header in headers
@@ -70,6 +62,9 @@ genrule(
     outs = ["Public/mozjpeg/" + x for x in headers] +
     ["Public/mozjpeg/jconfig.h"] +
     ["Public/mozjpeg/lib/lib{}.a".format(x) for x in libs],
+    tools = [
+        "@apple_cross_toolchain//:toolchain_files",
+    ],
     visibility = [
         "//visibility:public",
     ]

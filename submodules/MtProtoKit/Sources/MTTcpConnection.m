@@ -9,7 +9,7 @@
 #import <netinet/in.h>
 #import <arpa/inet.h>
 #import <CommonCrypto/CommonDigest.h>
-#import <CommonCrypto/CommonHMac.h>
+#import <CommonCrypto/CommonHMAC.h>
 #import <Security/SecRandom.h>
 
 #import <MtProtoKit/MTInternalId.h>

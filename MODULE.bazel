@@ -1,8 +1,9 @@
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 bazel_dep(name = "bazel_features", version = "1.33.0")
-bazel_dep(name = "bazel_skylib", version = "1.8.1")
-bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_shell", version = "0.4.1")
 
 bazel_dep(name = "rules_xcodeproj")
 local_path_override(
@@ -10,10 +11,17 @@ local_path_override(
     path = "./build-system/bazel-rules/rules_xcodeproj",
 )
 
-bazel_dep(name = "rules_apple", repo_name = "build_bazel_rules_apple")
-local_path_override(
+bazel_dep(name = "rules_apple", version = "4.3.3", repo_name = "build_bazel_rules_apple")
+git_override(
     module_name = "rules_apple",
-    path = "./build-system/bazel-rules/rules_apple",
+    remote = "https://github.com/bazelbuild/rules_apple.git",
+    commit = "d930c4c6eaeed91c8275604a428407d123a85216",
+    patches = [
+        "//patches:rules_apple_no_exec_platform_constraint.patch",
+        "//patches:rules_apple_create_simulator_action.patch",
+        "//patches:rules_apple_alticonstool_fix.patch",
+    ],
+    patch_strip = 1,
 )
 
 bazel_dep(name = "rules_swift", repo_name = "build_bazel_rules_swift")
@@ -28,10 +36,48 @@ local_path_override(
     path = "./build-system/bazel-rules/apple_support",
 )
 
+bazel_dep(name = "rules_applecross")
+git_override(
+    module_name = "rules_applecross",
+    remote = "https://github.com/apple-cross-toolchain/rules_applecross.git",
+    commit = "2bb49eb5f0bc92923903c45fa2c88d23b68e7afd",
+)
+
+bazel_dep(name = "xctestrunner", version = "0.0.1")
+git_override(
+    module_name = "xctestrunner",
+    remote = "https://github.com/apple-cross-toolchain/xctestrunner-bash.git",
+    commit = "9548d93f29a2a93315d7a0458622682c0f76e6fe",
+)
+
+bazel_dep(name = "rules_cc", version = "0.2.17")
+bazel_dep(name = "llvm", version = "0.6.1")
+single_version_override(
+    module_name = "llvm",
+    patch_strip = 1,
+    patches = ["//patches:llvm_glibc_x86_includes.patch"],
+    version = "0.6.1",
+)
+
+apple_cross_toolchain = use_extension(
+    "@rules_applecross//toolchain:extensions.bzl",
+    "apple_cross_toolchain",
+)
+apple_cross_toolchain.configure(
+    name = "apple_cross_toolchain",
+    apple_sdk_urls = ["SDKS_URL"],
+    apple_sdk_sha256 = "22f572b8e2110b076be3623bac9de2a9892b98b2914922f9ae74657afece8b17",
+    apple_sdk_archive_type = "tar.xz",
+)
+use_repo(apple_cross_toolchain, "apple_cross_toolchain")
+
+register_toolchains("@apple_cross_toolchain//:cc-toolchain-ios_arm64")
+register_toolchains("@apple_cross_toolchain//:swift-toolchain-ios_arm64")
+
 http_file(
     name = "cmake_tar_gz",
-    urls = ["https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-macos-universal.tar.gz"],
-    sha256 = "3be85f5b999e327b1ac7d804cbc9acd767059e9f603c42ec2765f6ab68fbd367",
+    urls = ["https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-x86_64.tar.gz"],
+    sha256 = "773cc679c3a7395413bd096523f8e5d6c39f8718af4e12eb4e4195f72f35e4ab",
 )
 
 http_file(
@@ -41,9 +87,9 @@ http_file(
 )
 
 http_file(
-    name = "ninja-mac_zip",
-    urls = ["https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-mac.zip"],
-    sha256 = "89a287444b5b3e98f88a945afa50ce937b8ffd1dcc59c555ad9b1baf855298c9",
+    name = "ninja-linux_zip",
+    urls = ["https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux.zip"],
+    sha256 = "6f98805688d19672bd699fbbfa2c2cf0fc054ac3df1f0e6a47664d963d530255",
 )
 
 http_file(
@@ -60,7 +106,7 @@ provisioning_profile_repository = use_extension("@build_bazel_rules_apple//apple
 bazel_dep(name = "build_configuration")
 local_path_override(
     module_name = "build_configuration",
-    path = "./build-input/configuration-repository",
+    path = "./build-system/example-configuration",
 )
 
 bazel_dep(name = "sourcekit_bazel_bsp", version = "0.7.1")

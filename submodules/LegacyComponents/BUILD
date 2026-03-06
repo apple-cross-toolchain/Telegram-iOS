@@ -1,3 +1,4 @@
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
 
 filegroup(
     name = "LegacyComponentsResources",
@@ -40,7 +41,7 @@ objc_library(
     ],
     sdk_frameworks = [
         "Foundation",
-        "UIKIt",
+        "UIKit",
         "QuickLook",
         "CoreMotion",
     ],

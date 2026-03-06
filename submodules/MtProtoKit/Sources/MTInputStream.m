@@ -3,7 +3,7 @@
 #import <Foundation/Foundation.h>
 #import <MtProtoKit/MTLogging.h>
 
-#if TARGET_OS_IPHONE
+#if defined(__linux__)
 #   import <endian.h>
 #endif
 

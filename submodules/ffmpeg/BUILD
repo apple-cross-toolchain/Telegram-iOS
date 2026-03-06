@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
 
 ffmpeg_header_paths = [
     "libavutil/hwcontext.h",
@@ -202,6 +204,14 @@ genrule(
     """
         set -x
 
+        # Resolve DEVELOPER_DIR to absolute path
+        if [ -n "$${DEVELOPER_DIR:-}" ] && [ "$${DEVELOPER_DIR}" = "$${DEVELOPER_DIR#/}" ]; then
+          export DEVELOPER_DIR="$$(cd "$$DEVELOPER_DIR" && pwd -P)"
+        fi
+        if [ -n "$${DEVELOPER_DIR:-}" ]; then
+          export PATH="$$DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin:$$PATH"
+        fi
+
         ABS_RULEDIR="$$(pwd)/$(RULEDIR)"
         echo "ABS_RULEDIR=$$ABS_RULEDIR"
 
@@ -266,13 +276,14 @@ genrule(
 
         FFMPEG_VERSION="7.1.1"
 
-        if [ "$(TARGET_CPU)" == "ios_arm64" ]; then
+        if [ "$(TARGET_CPU)" == "ios_arm64" ] || [ "$(TARGET_CPU)" == "aarch64" ] || [ "$(TARGET_CPU)" == "x86_64" ]; then
             BUILD_ARCH="arm64"
         elif [ "$(TARGET_CPU)" == "ios_sim_arm64" ]; then
             BUILD_ARCH="sim_arm64"
             VARIANT="debug"
         else
             echo "Unsupported architecture $(TARGET_CPU)"
+            exit 1
         fi
 
         "$$SOURCE_PATH/build-ffmpeg-bazel.sh" "$$VARIANT" "$$BUILD_ARCH" "$$BUILD_DIR" "$$SOURCE_PATH" "$$FFMPEG_VERSION"
@@ -288,6 +299,9 @@ genrule(
     ] + [
         "Public/{}".format(header_path) for header_path in ffmpeg_header_paths
     ] + ffmpeg_libs,
+    tools = [
+        "@apple_cross_toolchain//:toolchain_files",
+    ],
     visibility = [
         "//visibility:public",
     ],

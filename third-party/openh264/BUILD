@@ -1,3 +1,4 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 arm64_specific_sources = [
     "third_party/openh264/src/codec/encoder/core/arm64/intra_pred_aarch64_neon.S",
