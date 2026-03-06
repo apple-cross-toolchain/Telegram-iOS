@@ -2,6 +2,14 @@
 
 set -e
 
+# Resolve DEVELOPER_DIR and add toolchain bin to PATH
+if [ -n "${DEVELOPER_DIR:-}" ]; then
+	if [ "${DEVELOPER_DIR}" = "${DEVELOPER_DIR#/}" ]; then
+		export DEVELOPER_DIR="$(cd "$DEVELOPER_DIR" && pwd -P)"
+	fi
+	export PATH="$DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin:$PATH"
+fi
+
 name=<<<NAME>>>
 version=<<<MIN_OS_VERSION>>>
 
