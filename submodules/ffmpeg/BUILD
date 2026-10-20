@@ -1,3 +1,4 @@
+load("//build-system/bazel-utils:applecross.bzl", "APPLECROSS_GENRULE_ENV")
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
@@ -199,7 +200,7 @@ genrule(
     ] + [
         "//third-party/dav1d:Public/dav1d/lib/lib{}.a".format(x) for x in dav1d_libs
     ],
-    cmd_bash =
+    cmd_bash = APPLECROSS_GENRULE_ENV +
     """
         set -x
 
@@ -296,6 +297,9 @@ genrule(
     ] + [
         "Public/{}".format(header_path) for header_path in ffmpeg_header_paths
     ] + ffmpeg_libs,
+    tools = [
+        "//build-system/host-tools:apple_cross_files",
+    ],
     visibility = [
         "//visibility:public",
     ],

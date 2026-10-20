@@ -14,7 +14,7 @@ CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DJPEGXL_ENABLE_BE
 if [ "$ARCH" = "arm64" ]; then
   IOS_PLATFORMDIR="$(xcode-select -p)/Platforms/iPhoneOS.platform"
   IOS_SYSROOT=($IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS*.sdk)
-  export CFLAGS="-Wall -arch arm64 -miphoneos-version-min=13.0 -funwind-tables"
+  export CFLAGS="-Wall -arch arm64 --target=arm64-apple-ios13.0 -miphoneos-version-min=13.0 -funwind-tables"
   export CXXFLAGS="$CFLAGS"
 
   cd "$BUILD_DIR"
@@ -25,6 +25,7 @@ if [ "$ARCH" = "arm64" ]; then
   echo "set(CMAKE_SYSTEM_NAME Darwin)" >> toolchain.cmake
   echo "set(CMAKE_SYSTEM_PROCESSOR aarch64)" >> toolchain.cmake
   echo "set(CMAKE_C_COMPILER $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang)" >> toolchain.cmake
+  echo "set(CMAKE_CXX_COMPILER $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++)" >> toolchain.cmake
 
   cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -DCMAKE_OSX_SYSROOT=${IOS_SYSROOT[0]} $CMAKE_OPTIONS ../libjxl
   make
@@ -42,6 +43,7 @@ elif [ "$ARCH" = "sim_arm64" ]; then
   echo "set(CMAKE_SYSTEM_NAME Darwin)" >> toolchain.cmake
   echo "set(CMAKE_SYSTEM_PROCESSOR aarch64)" >> toolchain.cmake
   echo "set(CMAKE_C_COMPILER $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang)" >> toolchain.cmake
+  echo "set(CMAKE_CXX_COMPILER $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++)" >> toolchain.cmake
 
   cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -DCMAKE_OSX_SYSROOT=${IOS_SYSROOT[0]} $CMAKE_OPTIONS ../libjxl
   make
@@ -59,6 +61,7 @@ elif [ "$ARCH" = "macos_arm64" ]; then
   echo "set(CMAKE_SYSTEM_NAME Darwin)" >> toolchain.cmake
   echo "set(CMAKE_SYSTEM_PROCESSOR aarch64)" >> toolchain.cmake
   echo "set(CMAKE_C_COMPILER $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang)" >> toolchain.cmake
+  echo "set(CMAKE_CXX_COMPILER $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++)" >> toolchain.cmake
 
   cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -DCMAKE_OSX_SYSROOT=${IOS_SYSROOT[0]} $CMAKE_OPTIONS ../libjxl
   make
@@ -76,6 +79,7 @@ elif [ "$ARCH" = "x86_64" ]; then
   echo "set(CMAKE_SYSTEM_NAME Darwin)" >> toolchain.cmake
   echo "set(CMAKE_SYSTEM_PROCESSOR AMD64)" >> toolchain.cmake
   echo "set(CMAKE_C_COMPILER $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang)" >> toolchain.cmake
+  echo "set(CMAKE_CXX_COMPILER $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++)" >> toolchain.cmake
 
   cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -DCMAKE_OSX_SYSROOT=${IOS_SYSROOT[0]} $CMAKE_OPTIONS ../libjxl
   make

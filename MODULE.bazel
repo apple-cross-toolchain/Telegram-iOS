@@ -27,11 +27,27 @@ http_archive(
     build_file_content = _WASI_SDK_BUILD,
 )
 
+http_archive(
+    name = "wasi_sdk_linux_x86_64",
+    urls = ["https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-33/wasi-sdk-33.0-x86_64-linux.tar.gz"],
+    sha256 = "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+    strip_prefix = "wasi-sdk-33.0-x86_64-linux",
+    build_file_content = _WASI_SDK_BUILD,
+)
+
 bazel_dep(name = "bazel_features", version = "1.51.0")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "platforms", version = "1.1.0")
-bazel_dep(name = "rules_cc", version = "0.2.20")
+bazel_dep(name = "rules_cc", version = "0.2.26")
+bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "gperf", version = "3.1.bcr.2")
 bazel_dep(name = "rules_rust", version = "0.74.0")
+single_version_override(
+    module_name = "rules_rust",
+    patch_strip = 1,
+    patches = ["//patches:rules_rust_absolute_apple_env.patch"],
+    version = "0.74.0",
+)
 bazel_dep(name = "rules_shell", version = "0.6.1")
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
@@ -84,6 +100,7 @@ wallet_engine_crates.from_specs(
         "aarch64-apple-ios-sim",
         "x86_64-apple-darwin",
         "x86_64-apple-ios",
+        "x86_64-unknown-linux-gnu",
     ],
 )
 wallet_engine_crates.spec(package = "anyhow", repositories = ["wallet_engine_bindgen_crates"], version = "=1.0.102")
@@ -94,6 +111,7 @@ wallet_engine_crates.from_specs(
     supported_platform_triples = [
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
     ],
 )
 use_repo(
@@ -148,6 +166,7 @@ mtproto_engine_crates.from_specs(
         "aarch64-apple-ios-sim",
         "x86_64-apple-darwin",
         "x86_64-apple-ios",
+        "x86_64-unknown-linux-gnu",
     ],
 )
 use_repo(mtproto_engine_crates, "mtproto_engine_crates")
@@ -178,22 +197,70 @@ local_path_override(
     path = "./build-system/bazel-rules/rules_xcodeproj",
 )
 
-bazel_dep(name = "rules_apple", repo_name = "build_bazel_rules_apple")
-local_path_override(
+bazel_dep(name = "rules_apple", version = "5.3.1", repo_name = "build_bazel_rules_apple")
+single_version_override(
     module_name = "rules_apple",
-    path = "./build-system/bazel-rules/rules_apple",
+    patch_strip = 1,
+    patches = [
+        "//patches:rules_apple_execution_platform.patch",
+        "//patches:rules_apple_bundletool_path.patch",
+        "//patches:rules_apple_no_absolute_tool_paths.patch",
+        "//patches:rules_apple_codesign_inputs_sdk_tools.patch",
+        "//patches:rules_apple_python_stub_interpreter.patch",
+        "//patches:rules_apple_alticonstool_missing_icons.patch",
+        "//patches:rules_apple_dossier_zipfile.patch",
+    ],
+    version = "5.3.1",
 )
 
-bazel_dep(name = "rules_swift", repo_name = "build_bazel_rules_swift")
-local_path_override(
-    module_name = "rules_swift",
-    path = "./build-system/bazel-rules/rules_swift",
-)
+bazel_dep(name = "rules_swift", version = "4.2.2", repo_name = "build_bazel_rules_swift")
 
-bazel_dep(name = "apple_support", repo_name = "build_bazel_apple_support")
-local_path_override(
+bazel_dep(name = "apple_support", version = "2.10.1", repo_name = "build_bazel_apple_support")
+single_version_override(
     module_name = "apple_support",
-    path = "./build-system/bazel-rules/apple_support",
+    patch_strip = 1,
+    patches = [
+        "//patches:apple_support_bazel8_xcode_properties.patch",
+    ],
+    version = "2.10.1",
+)
+
+bazel_dep(name = "rules_applecross", version = "0.0.3")
+git_override(
+    module_name = "rules_applecross",
+    branch = "main",
+    remote = "https://github.com/apple-cross-toolchain/rules_applecross.git",
+)
+
+bazel_dep(name = "llvm", version = "0.8.9")
+
+applecross_swift = use_extension("@build_bazel_rules_swift//swift:extensions.bzl", "swift")
+
+applecross_swift.toolchain(
+    name = "applecross_swift",
+    platform_sha256 = {
+        "ubuntu24.04": "827b2e935b52425068729d277148f286b37886231299d71f9136bcffd7084339",
+    },
+    swift_version = "6.3.2",
+)
+use_repo(applecross_swift, "applecross_swift_ubuntu24.04")
+
+apple_cross_toolchain = use_extension(
+    "@rules_applecross//toolchain:extensions.bzl",
+    "apple_cross_toolchain",
+)
+apple_cross_toolchain.configure(
+    name = "apple_cross_toolchain",
+    apple_sdk_archive_type = "tar.zst",
+    apple_sdk_path = "apple-sdks.tar.zst",
+    swift_tools = "@applecross_swift_ubuntu24.04//:tools",
+)
+use_repo(apple_cross_toolchain, "apple_cross_toolchain")
+
+register_toolchains(
+    "@apple_cross_toolchain//:all",
+    "@rules_applecross//toolchain:apple_bundling_on_linux",
+    "@llvm//toolchain:linux_x86_64_to_linux_x86_64",
 )
 
 # Must be registered here: only the root module outranks rules_cc's generic
@@ -209,6 +276,12 @@ http_file(
 )
 
 http_file(
+    name = "cmake_linux_x86_64_tar_gz",
+    sha256 = "773cc679c3a7395413bd096523f8e5d6c39f8718af4e12eb4e4195f72f35e4ab",
+    urls = ["https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-x86_64.tar.gz"],
+)
+
+http_file(
     name = "meson_tar_gz",
     sha256 = "999b65f21c03541cf11365489c1fad22e2418bb0c3d50ca61139f2eec09d5496",
     urls = ["https://github.com/mesonbuild/meson/releases/download/1.6.0/meson-1.6.0.tar.gz"],
@@ -218,6 +291,12 @@ http_file(
     name = "ninja-mac_zip",
     sha256 = "89a287444b5b3e98f88a945afa50ce937b8ffd1dcc59c555ad9b1baf855298c9",
     urls = ["https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-mac.zip"],
+)
+
+http_file(
+    name = "ninja-linux_zip",
+    sha256 = "6f98805688d19672bd699fbbfa2c2cf0fc054ac3df1f0e6a47664d963d530255",
+    urls = ["https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux.zip"],
 )
 
 http_file(
@@ -234,5 +313,5 @@ provisioning_profile_repository = use_extension("@build_bazel_rules_apple//apple
 bazel_dep(name = "build_configuration")
 local_path_override(
     module_name = "build_configuration",
-    path = "./build-input/configuration-repository",
+    path = "./build-system/example-configuration",
 )

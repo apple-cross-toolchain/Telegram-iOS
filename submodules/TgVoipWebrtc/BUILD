@@ -49,9 +49,10 @@ _WASM_CORE_COMMON_SRCS = [
 # payloads).
 _WASM_CORE_CMD = """
 set -e
-SDK_CLANG="$(execpath {sdk}//:bin/clang++)"
+SDK_CLANG="$(execpath //build-system/host-tools:wasi_sdk_clang)"
 SDK_DIR="$$(cd "$$(dirname "$$SDK_CLANG")/.." && pwd)"
 "$$SDK_CLANG" --target=wasm32-wasip1 --sysroot="$$SDK_DIR/share/wasi-sysroot" \\
+    -nostdinc++ -isystem "$$SDK_DIR/share/wasi-sysroot/include/wasm32-wasip1/noeh/c++/v1" \\
     -std=c++17 -Oz -flto -fno-exceptions -fno-rtti \\
     -mexec-model=reactor -Wl,--no-entry,--strip-all \\
     -Isubmodules/TgVoipWebrtc/tgcalls/tgcalls \\
@@ -70,19 +71,13 @@ genrule(
     name = "reference_core_wasm",
     srcs = _WASM_CORE_COMMON_SRCS + [
         "tgcalls/tgcalls/v2wasm/reference_core_factory.cpp",
-    ] + select({
-        "@platforms//os:linux": ["@wasi_sdk_linux//:all_files"],
-        "//conditions:default": ["@wasi_sdk_macos//:all_files"],
-    }),
+    ],
     outs = ["reference-core-abi1.wasm"],
-    cmd_bash = select({
-        "@platforms//os:linux": _WASM_CORE_CMD.format(sdk = "@wasi_sdk_linux", extra_srcs = _WASM_REFERENCE_EXTRA_SRCS),
-        "//conditions:default": _WASM_CORE_CMD.format(sdk = "@wasi_sdk_macos", extra_srcs = _WASM_REFERENCE_EXTRA_SRCS),
-    }),
-    tools = select({
-        "@platforms//os:linux": ["@wasi_sdk_linux//:bin/clang++"],
-        "//conditions:default": ["@wasi_sdk_macos//:bin/clang++"],
-    }),
+    cmd_bash = _WASM_CORE_CMD.format(extra_srcs = _WASM_REFERENCE_EXTRA_SRCS),
+    tools = [
+        "//build-system/host-tools:wasi_sdk_clang",
+        "//build-system/host-tools:wasi_sdk_files",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -96,19 +91,13 @@ genrule(
         "tgcalls/tgcalls/v2wasm/VariantCallCore.cpp",
         "tgcalls/tgcalls/v2wasm/VariantCallCore.h",
         "tgcalls/tgcalls/v2wasm/variant_core_factory.cpp",
-    ] + select({
-        "@platforms//os:linux": ["@wasi_sdk_linux//:all_files"],
-        "//conditions:default": ["@wasi_sdk_macos//:all_files"],
-    }),
+    ],
     outs = ["variant-core-abi1.wasm"],
-    cmd_bash = select({
-        "@platforms//os:linux": _WASM_CORE_CMD.format(sdk = "@wasi_sdk_linux", extra_srcs = _WASM_VARIANT_EXTRA_SRCS),
-        "//conditions:default": _WASM_CORE_CMD.format(sdk = "@wasi_sdk_macos", extra_srcs = _WASM_VARIANT_EXTRA_SRCS),
-    }),
-    tools = select({
-        "@platforms//os:linux": ["@wasi_sdk_linux//:bin/clang++"],
-        "//conditions:default": ["@wasi_sdk_macos//:bin/clang++"],
-    }),
+    cmd_bash = _WASM_CORE_CMD.format(extra_srcs = _WASM_VARIANT_EXTRA_SRCS),
+    tools = [
+        "//build-system/host-tools:wasi_sdk_clang",
+        "//build-system/host-tools:wasi_sdk_files",
+    ],
     visibility = ["//visibility:public"],
 )
 

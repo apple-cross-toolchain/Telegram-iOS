@@ -1,0 +1,18 @@
+--- a/cargo/private/cargo_build_script.bzl
++++ b/cargo/private/cargo_build_script.bzl
+@@ -500,6 +500,15 @@
+         cc_toolchain, feature_configuration = None, None
+     linker, _, link_args, linker_env = get_linker_and_args(ctx, "bin", toolchain, cc_toolchain, feature_configuration, None)
+     env.update(**linker_env)
++    for key in ("DEVELOPER_DIR", "SDKROOT"):
++        value = env.get(key)
++        if value and not value.startswith("/") and not value.startswith("${pwd}"):
++            env[key] = "${pwd}/" + value
++    if env.get("PATH"):
++        env["PATH"] = ":".join([
++            entry if not entry or entry.startswith("/") or entry.startswith("${pwd}") else "${pwd}/" + entry
++            for entry in env["PATH"].split(":")
++        ])
+     env["LD"] = linker
+     env["LDFLAGS"] = " ".join(_pwd_flags(link_args))
+ 

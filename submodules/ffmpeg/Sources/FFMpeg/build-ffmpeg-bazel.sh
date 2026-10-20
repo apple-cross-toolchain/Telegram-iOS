@@ -149,7 +149,7 @@ then
 		    CFLAGS="$CFLAGS -mmacosx-version-min=14.0 --target=arm64-apple-macosx14.0"
 		else
 		    PLATFORM="iPhoneOS"
-		    CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_TARGET"
+		    CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_TARGET --target=arm64-apple-ios$DEPLOYMENT_TARGET"
 		    if [ "$ARCH" = "arm64" ]
 		    then
 		        EXPORT="GASPP_FIX_XCODE5=1"
@@ -160,6 +160,7 @@ then
 		if [ "$PLATFORM" != "linux" ]; then
 			XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
 			CC="xcrun -sdk $XCRUN_SDK clang"
+			CROSS_TOOLS="--ar=$(xcrun -sdk $XCRUN_SDK --find ar) --nm=$(xcrun -sdk $XCRUN_SDK --find nm) --ranlib=$(xcrun -sdk $XCRUN_SDK --find ranlib) --strip=$(xcrun -sdk $XCRUN_SDK --find strip)"
 
 			if [ "$RAW_ARCH" = "arm64" ] || [ "$RAW_ARCH" = "sim_arm64" ] || [ "$RAW_ARCH" = "macos_arm64" ]
 			then
@@ -203,6 +204,7 @@ then
 				    --arch=$ARCH \
 				    --cc="$CC" \
 				    --as="$AS" \
+				    $CROSS_TOOLS \
 				    $CONFIGURE_FLAGS \
 				    --enable-audiotoolbox \
 				    --enable-decoder=alac_at,gsm_ms_at,aac_at \

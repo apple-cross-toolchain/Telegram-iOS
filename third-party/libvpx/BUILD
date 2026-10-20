@@ -1,5 +1,6 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//build-system/bazel-utils:applecross.bzl", "APPLECROSS_GENRULE_ENV")
 
 headers = [
     "vp8.h",
@@ -33,9 +34,10 @@ genrule(
     srcs = [
         "build-libvpx-bazel.sh",
         "0001-Support-arm64-simulator.patch",
+        "0002-Cross-compile-from-Linux.patch",
         ":libvpx_sources",
     ],
-    cmd_bash = 
+    cmd_bash = APPLECROSS_GENRULE_ENV +
     """
     set -ex
 
@@ -81,8 +83,13 @@ genrule(
 
     cp -R "$$SOURCE_PATH" "$$BUILD_DIR/"
 
+    cp $(location :0002-Cross-compile-from-Linux.patch) "$$BUILD_DIR/"
+
     pushd "$$BUILD_DIR/libvpx"
     patch -p1 < ../0001-Support-arm64-simulator.patch
+    if [ "$$(uname -s)" = "Linux" ]; then
+        patch -p1 < ../0002-Cross-compile-from-Linux.patch
+    fi
     popd
 
     mkdir -p "$$BUILD_DIR/Public/libvpx"
@@ -101,6 +108,7 @@ genrule(
     ["Public/vpx/vpx_config.h"] +
     ["Public/vpx/lib{}.a".format(x) for x in libs],
     tools = [
+        "//build-system/host-tools:apple_cross_files",
         "//third-party/yasm:yasm.tar",
     ],
     visibility = [

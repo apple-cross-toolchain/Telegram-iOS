@@ -42,7 +42,7 @@ objc_library(
     ],
     sdk_frameworks = [
         "Foundation",
-        "UIKIt",
+        "UIKit",
         "QuickLook",
         # TGMediaPickerGalleryVideoItemView uses MPVolumeView; declared here so a test bundle that links this
         # library without the app's other MediaPlayer clients still resolves it.

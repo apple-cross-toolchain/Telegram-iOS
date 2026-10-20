@@ -2,7 +2,7 @@
 
 #import "LegacyComponentsInternal.h"
 
-#import <endian.h>
+#import <Endian.h>
 
 static inline int roundUpInput(int numToRound, int multiple)
 {

@@ -10,7 +10,7 @@ BUILD_DIR=$(echo "$(cd "$(dirname "$3")"; pwd -P)/$(basename "$3")")
 if [ "$ARCH" = "arm64" ]; then
   IOS_PLATFORMDIR="$(xcode-select -p)/Platforms/iPhoneOS.platform"
   IOS_SYSROOT=($IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS*.sdk)
-  export CFLAGS="-Wall -arch arm64 -miphoneos-version-min=13.0 -funwind-tables"
+  export CFLAGS="-Wall -arch arm64 --target=arm64-apple-ios13.0 -miphoneos-version-min=13.0 -funwind-tables"
 
   cd "$BUILD_DIR"
   mkdir build

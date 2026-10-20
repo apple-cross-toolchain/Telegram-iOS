@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//build-system/bazel-utils:applecross.bzl", "APPLECROSS_GENRULE_ENV")
 load("@rules_cc//cc:objc_library.bzl", "objc_library")
 
 load(
@@ -28,12 +29,11 @@ genrule(
     srcs = [
         "build-td-bazel.sh",
         ":td_sources",
-        "@cmake_tar_gz//file",
         "//third-party/boringssl:crypto",
     ] + [
         "//third-party/boringssl:{}".format(header) for header in crypto_headers
     ],
-    cmd_bash = 
+    cmd_bash = APPLECROSS_GENRULE_ENV +
     """
     set -ex
 
@@ -54,7 +54,8 @@ genrule(
     CMAKE_DIR="$$(pwd)/$$BUILD_DIR/cmake"
     rm -rf "$$CMAKE_DIR"
     mkdir -p "$$CMAKE_DIR"
-    tar -xzf "$(location @cmake_tar_gz//file)" -C "$$CMAKE_DIR"
+    tar -xzf "$(location //build-system/host-tools:cmake_tar_gz)" -C "$$CMAKE_DIR"
+    CMAKE_BIN_DIR="$$(dirname "$$(find "$$CMAKE_DIR" -type f -name cmake -perm -u+x | head -n 1)")"
 
     OPENSSL_BASE_DIR="$$(pwd)/$$BUILD_DIR"
     OPENSSL_DIR="$$OPENSSL_BASE_DIR/openssl"
@@ -82,7 +83,7 @@ genrule(
 
     mkdir -p "$$BUILD_DIR/Public/td"
 
-    PATH="$$CMAKE_DIR/cmake-4.1.2-macos-universal/CMake.app/Contents/bin:$$PATH" sh $$BUILD_DIR/build-td-bazel.sh $$BUILD_ARCH "$$BUILD_DIR/td" "$$BUILD_DIR" "$$OPENSSL_DIR"
+    GPERF_EXECUTABLE="$$(pwd)/$(execpath @gperf)" PATH="$$CMAKE_BIN_DIR:$$PATH" bash $$BUILD_DIR/build-td-bazel.sh $$BUILD_ARCH "$$BUILD_DIR/td" "$$BUILD_DIR" "$$OPENSSL_DIR"
     """ +
     "\n".join([
         "cp -f \"$$BUILD_DIR/td/tde2e/{}\" \"$(location Public/td/{})\"".format(header, header) for header in headers
@@ -97,6 +98,11 @@ genrule(
     ] +
     [
         "Public/td/lib/lib{}.a".format(x) for x in libs
+    ],
+    tools = [
+        "//build-system/host-tools:apple_cross_files",
+        "//build-system/host-tools:cmake_tar_gz",
+        "@gperf",
     ],
     visibility = [
         "//visibility:public",

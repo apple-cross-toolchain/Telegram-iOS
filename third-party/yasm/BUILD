@@ -1,4 +1,5 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+load("//build-system/bazel-utils:applecross.bzl", "APPLECROSS_GENRULE_ENV")
 
 filegroup(
     name = "yasm_sources",
@@ -11,9 +12,8 @@ genrule(
     name = "yasm",
     srcs = [
         ":yasm_sources",
-        "@cmake_tar_gz//file",
     ],
-    cmd_bash =
+    cmd_bash = APPLECROSS_GENRULE_ENV +
 """
 set -x
     core_count=$$(nproc 2>/dev/null || PATH="$$PATH:/usr/sbin" sysctl -n hw.logicalcpu 2>/dev/null || echo 4)
@@ -24,13 +24,13 @@ set -x
     CMAKE_DIR="$$(pwd)/$$BUILD_DIR/cmake"
     rm -rf "$$CMAKE_DIR"
     mkdir -p "$$CMAKE_DIR"
-    tar -xf "$(location @cmake_tar_gz//file)" -C "$$CMAKE_DIR"
+    tar -xf "$(location //build-system/host-tools:cmake_tar_gz)" -C "$$CMAKE_DIR"
 
-    # Find cmake: try system cmake first, then downloaded macOS cmake
+    # Find cmake: try system cmake first, then downloaded cmake
     if command -v cmake >/dev/null 2>&1; then
         CMAKE_BIN="cmake"
-    elif [ -d "$$CMAKE_DIR/cmake-4.1.2-macos-universal/CMake.app/Contents/bin" ]; then
-        CMAKE_BIN="$$CMAKE_DIR/cmake-4.1.2-macos-universal/CMake.app/Contents/bin/cmake"
+    elif [ -n "$$(find "$$CMAKE_DIR" -type f -name cmake -perm -u+x | head -n 1)" ]; then
+        CMAKE_BIN="$$(find "$$CMAKE_DIR" -type f -name cmake -perm -u+x | head -n 1)"
     else
         echo "cmake not found"
         exit 1
@@ -50,6 +50,9 @@ set -x
 """,
     outs = [
         "yasm.tar",
+    ],
+    tools = [
+        "//build-system/host-tools:cmake_tar_gz",
     ],
     visibility = [
         "//visibility:public",

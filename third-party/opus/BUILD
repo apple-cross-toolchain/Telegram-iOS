@@ -1,5 +1,6 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//build-system/bazel-utils:applecross.bzl", "APPLECROSS_GENRULE_ENV")
 
 headers = [
     "opus.h",
@@ -19,7 +20,7 @@ genrule(
         "build-opus-bazel.sh",
         "opus-1.5.1.tar.gz",
     ],
-    cmd_bash = 
+    cmd_bash = APPLECROSS_GENRULE_ENV +
     """
     set -ex
 
@@ -50,7 +51,7 @@ genrule(
 
     mkdir -p "$$BUILD_DIR/Public/opus"
 
-    sh $$BUILD_DIR/build-opus-bazel.sh $$BUILD_ARCH "$$BUILD_DIR" opus-1.5.1.tar.gz
+    bash $$BUILD_DIR/build-opus-bazel.sh $$BUILD_ARCH "$$BUILD_DIR" opus-1.5.1.tar.gz
     """ +
     "\n".join([
         "cp -f \"$$BUILD_DIR/built/include/opus/{}\" \"$(location Public/opus/{})\"".format(header, header) for header in headers
@@ -61,6 +62,9 @@ genrule(
     ]),
     outs = ["Public/opus/" + x for x in headers] +
     ["Public/opus/lib/lib{}.a".format(x) for x in libs],
+    tools = [
+        "//build-system/host-tools:apple_cross_files",
+    ],
     visibility = [
         "//visibility:public",
     ]

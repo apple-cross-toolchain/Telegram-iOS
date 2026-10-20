@@ -1,5 +1,6 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//build-system/bazel-utils:applecross.bzl", "APPLECROSS_GENRULE_ENV")
 
 generated_headers = [
     "vcs_version.h",
@@ -41,9 +42,8 @@ genrule(
         "arm64-iPhoneSimulator.meson",
         ":dav1d_sources",
         "@meson_tar_gz//file",
-        "@ninja-mac_zip//file",
     ],
-    cmd_bash = 
+    cmd_bash = APPLECROSS_GENRULE_ENV +
     """
     set -ex
 
@@ -76,7 +76,7 @@ genrule(
         NINJA_DIR="$$(pwd)/$$BUILD_DIR/ninja"
         rm -rf "$$NINJA_DIR"
         mkdir -p "$$NINJA_DIR"
-        unzip "$(location @ninja-mac_zip//file)" -d "$$NINJA_DIR"
+        unzip "$(location //build-system/host-tools:ninja_zip)" -d "$$NINJA_DIR"
         EXTRA_PATH="$$MESON_DIR/meson-1.6.0:$$NINJA_DIR"
     fi
 
@@ -111,6 +111,10 @@ genrule(
     outs = ["Public/" + x for x in generated_headers] +
     ["Public/" + x for x in headers] +
     ["Public/dav1d/lib/lib{}.a".format(x) for x in libs],
+    tools = [
+        "//build-system/host-tools:apple_cross_files",
+        "//build-system/host-tools:ninja_zip",
+    ],
     visibility = [
         "//visibility:public",
     ]

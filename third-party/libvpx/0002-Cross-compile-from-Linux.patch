@@ -1,0 +1,39 @@
+diff --color -ru a/build/make/configure.sh b/build/make/configure.sh
+--- a/build/make/configure.sh
++++ b/build/make/configure.sh
+@@ -726,7 +726,12 @@
+ 
+ # Print the Xcode version.
+ show_xcode_version() {
+-  xcodebuild -version | head -n1 | cut -d' ' -f2
++  if command -v xcodebuild >/dev/null 2>&1; then
++    xcodebuild -version | head -n1 | cut -d' ' -f2
++  else
++    sed -n '/CFBundleShortVersionString/{n;s/.*<string>\(.*\)<\/string>.*/\1/p;}' \
++      "${DEVELOPER_DIR}/../version.plist"
++  fi
+ }
+ 
+ # Fails when Xcode version is less than 6.3.
+@@ -1154,6 +1159,9 @@
+             if [ "${tgt_os}" == "iphonesimulator" ]; then
+               add_cflags --target=arm64-apple-ios7.0-simulator
+               add_ldflags --target=arm64-apple-ios7.0-simulator
++            else
++              add_cflags --target=arm64-apple-ios${IOS_VERSION_MIN}
++              add_ldflags --target=arm64-apple-ios${IOS_VERSION_MIN}
+             fi
+ 
+             alt_libc="$(show_darwin_sdk_path $sdk_platform_name)"
+@@ -1185,11 +1193,6 @@
+                 ;;
+             esac
+ 
+-            if [ "$(show_darwin_sdk_major_version $sdk_platform_name)" -gt 8 ]; then
+-              check_add_cflags -fembed-bitcode
+-              check_add_asflags -fembed-bitcode
+-              check_add_ldflags -fembed-bitcode
+-            fi
+           fi
+ 
+           asm_conversion_cmd="${source_path_mk}/build/make/ads2gas_apple.pl"

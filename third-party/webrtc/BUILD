@@ -2998,6 +2998,8 @@ fft4g_sources = [
 raw_combined_cpp_sources = webrtc_headers + webrtc_sources
 raw_combined_objcpp_sources = webrtc_objcpp_sources
 
+webrtc_header_files = ["webrtc/" + path for path in webrtc_headers if path.endswith(".h")]
+
 # Platform-specific source files: GCD task queue on Apple, stdlib on Linux
 apple_only_cpp_sources = [
     "webrtc/rtc_base/task_queue_gcd.cc",
@@ -3106,7 +3108,7 @@ objc_library(
     srcs = [ "webrtc/sdk/" + path for path in ios_objc_sources ] + [
         "webrtc/sdk/" + path for path in ios_objcpp_sources ] + [
         "webrtc/rtc_base/system/gcd_helpers.m",
-    ],
+    ] + webrtc_header_files,
     copts = [
         "-w",
         "-Ithird-party/webrtc/webrtc/",
@@ -3247,7 +3249,7 @@ objc_library(
     srcs = [
         "webrtc/rtc_base/system/gcd_helpers.m",
         "webrtc/rtc_base/system/cocoa_threading.mm",
-    ],
+    ] + webrtc_header_files,
     hdrs = [
         "webrtc/rtc_base/system/gcd_helpers.h",
         "webrtc/rtc_base/system/cocoa_threading.h",

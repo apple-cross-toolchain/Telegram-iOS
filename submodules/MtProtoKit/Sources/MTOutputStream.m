@@ -1,7 +1,7 @@
 #import <MtProtoKit/MTOutputStream.h>
 
 #if TARGET_OS_IPHONE
-#   import <endian.h>
+#   import <Endian.h>
 #endif
 
 static inline int roundUp(int numToRound, int multiple)

@@ -60,11 +60,14 @@ elif [ "${ARCH}" == "macos_arm64" ]; then
   EXTRA_CONFIG="--host=arm-apple-darwin20"
 else
   PLATFORM="iphoneos"
-  EXTRA_CFLAGS="-arch ${ARCH}"
+  EXTRA_CFLAGS="-arch ${ARCH} --target=arm64-apple-ios$MINIOSVERSION"
   EXTRA_CONFIG="--host=arm-apple-darwin"
 fi
 
 SDK_PATH="$(xcrun --sdk $PLATFORM --show-sdk-path 2>/dev/null)"
+export CC="$(xcrun --sdk $PLATFORM --find clang)"
+export AR="$(xcrun --sdk $PLATFORM --find ar)"
+export RANLIB="$(xcrun --sdk $PLATFORM --find ranlib)"
 
 mkdir -p "${INTERDIR}"
 

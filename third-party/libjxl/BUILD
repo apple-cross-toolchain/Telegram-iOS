@@ -1,5 +1,6 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//build-system/bazel-utils:applecross.bzl", "APPLECROSS_GENRULE_ENV")
 load("@rules_cc//cc:objc_library.bzl", "objc_library")
 
 headers = [
@@ -46,9 +47,8 @@ genrule(
     srcs = [
         "build-libjxl-bazel.sh",
         ":libjxl_sources",
-        "@cmake_tar_gz//file",
     ],
-    cmd_bash = 
+    cmd_bash = APPLECROSS_GENRULE_ENV +
     """
     set -ex
 
@@ -73,7 +73,8 @@ genrule(
     CMAKE_DIR="$$(pwd)/$$BUILD_DIR/cmake"
     rm -rf "$$CMAKE_DIR"
     mkdir -p "$$CMAKE_DIR"
-    tar -xzf "$(location @cmake_tar_gz//file)" -C "$$CMAKE_DIR"
+    tar -xzf "$(location //build-system/host-tools:cmake_tar_gz)" -C "$$CMAKE_DIR"
+    CMAKE_BIN_DIR="$$(dirname "$$(find "$$CMAKE_DIR" -type f -name cmake -perm -u+x | head -n 1)")"
 
     cp $(location :build-libjxl-bazel.sh) "$$BUILD_DIR/"
 
@@ -83,7 +84,7 @@ genrule(
 
     mkdir -p "$$BUILD_DIR/Public/jxl"
 
-    PATH="$$CMAKE_DIR/cmake-4.1.2-macos-universal/CMake.app/Contents/bin:$$PATH" sh $$BUILD_DIR/build-libjxl-bazel.sh $$BUILD_ARCH "$$BUILD_DIR/libjxl" "$$BUILD_DIR"
+    PATH="$$CMAKE_BIN_DIR:$$PATH" bash $$BUILD_DIR/build-libjxl-bazel.sh $$BUILD_ARCH "$$BUILD_DIR/libjxl" "$$BUILD_DIR"
     """ +
     "\n".join([
         "cp -f \"$$BUILD_DIR/build/lib/include/{}\" \"$(location Public/{})\"".format(header, header) for header in headers
@@ -104,6 +105,10 @@ genrule(
     ["Public/jxl/lib/lib{}.a".format(x) for x in libs] +
     ["Public/jxl/lib/{}.a".format(x) for x in brotli_libs] +
     ["Public/jxl/lib/{}.a".format(x) for x in highway_libs],
+    tools = [
+        "//build-system/host-tools:apple_cross_files",
+        "//build-system/host-tools:cmake_tar_gz",
+    ],
     visibility = [
         "//visibility:public",
     ]
